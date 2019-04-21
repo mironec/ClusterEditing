@@ -77,6 +77,32 @@ double Graph::getErrorInClustering(const clustering_t & clusterings) const
 	return getPositiveErrorInClustering(clusterings) + getNegativeErrorInClustering(clusterings);
 }
 
+double Graph::getDeltaInClusteringMerge(const cluster_t & a, const cluster_t & b) const
+{
+	double deltaError = 0.0;
+
+	if (use_matrix) {
+		for (size_t n1 : a) {
+			for (size_t n2 : b) {
+				if (use_matrix) {
+					// Works for all edges, negative, positive, 0-weight
+					deltaError -= E_matrix[n1][n2];
+				}
+			}
+		}
+	}
+
+	else { throw new std::exception("Not using matrix representation"); }
+
+	return deltaError;
+}
+
+double Graph::getDeltaInClusteringSplit(const cluster_t & a, const cluster_t & b) const
+{
+	// Exactly inverse to the merge of the two clusters
+	return -getDeltaInClusteringMerge(a, b);
+}
+
 void Graph::streamGraph(std::ostream & stream) const
 {
 	stream << "Graph" << std::endl;
@@ -329,10 +355,10 @@ Graph * Graph::readJENAStream(std::istream & stream)
 			double edge_cost = atof(edge_desc.c_str());
 			// Bandaid fix for overflows
 			if (edge_cost < -1e250) {
-				edge_cost = -1000;
+				edge_cost = -1e20;
 			}
 			if (edge_cost > 1e250) {
-				edge_cost = 1000;
+				edge_cost = 1e20;
 			}
 
 			graph->addEdgeWithCost(n1, n2, edge_cost);

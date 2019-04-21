@@ -452,18 +452,18 @@ struct parseYoshikoOutputs_result parseYoshikoOutputs(string solved_dir, int sto
 		outstring.assign(istreambuf_iterator<char>(f_out), istreambuf_iterator<char>());	//Read the entire file
 
 		size_t pos1 = outstring.find("solving (possibly reduced) instances...");
-		if (pos1 == string::npos) continue;
+		if (pos1 == string::npos) { cout << "Ignored " << p_out << endl; continue; }
 		size_t pos2 = outstring.find("real: ", pos1);
-		if (pos2 == string::npos) continue;
+		if (pos2 == string::npos) { cout << "Ignored " << p_out << endl; continue; }
 		size_t pos3 = outstring.find("s", pos2);
-		if (pos3 == string::npos) continue;
+		if (pos3 == string::npos) { cout << "Ignored " << p_out << endl; continue; }
 		string timestr = outstring.substr(pos2 + 6, pos3 - pos2 - 6);
 		double time = atof(timestr.c_str());
 
 		pos1 = outstring.find("total cost (data reduction + ILP or heuristic):");
-		if (pos1 == string::npos) continue;
+		if (pos1 == string::npos) { cout << "Ignored " << p_out << endl; continue; }
 		pos2 = outstring.find("\n", pos1);
-		if (pos2 == string::npos) continue;
+		if (pos2 == string::npos) { cout << "Ignored " << p_out << endl; continue; }
 		string coststr = outstring.substr(pos1 + 48, pos2);
 		double cost = atof(coststr.c_str());
 
@@ -677,11 +677,11 @@ int main(int argc, char** argv) {
 		ss << "250 pop, 2 kept, 50 gens, " << mut << " mut, Node list gen";
 		genNames.push_back(ss.str());
 	}*/
-	for (int geners : {100,250,500,1000,2000}) {
-		auto gen = [geners, &generator, factoryCluster](const Graph& g) {return GenAlgo::geneticAlgorithm(g, generator, factoryCluster, 5, 2, geners, 0.1f, 0.3f, false); };
+	for (int geners : {100,250,500,1000,2500,5000,20000,60000}) {
+		auto gen = [geners, &generator, factoryCluster](const Graph& g) {return GenAlgo::geneticAlgorithm(g, generator, factoryCluster, 100, 2, geners, 0.1f, 0.3f, false); };
 		gens.push_back(gen);
 		stringstream ss;
-		ss << "5 pop, 2 kept, " << geners << " gens, 0.3 mut, Cluster gen";
+		ss << "100 pop, 2 kept, " << geners << " gens, 0.3 mut, Cluster gen";
 		genNames.push_back(ss.str());
 	}
 

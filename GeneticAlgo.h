@@ -16,6 +16,7 @@ public:
 
 	void setScore(double score);
 	double getScore() const;
+	double getScore(const Graph& graph);
 	virtual double computeScore(const Graph & graph) = 0;
 	bool operator< (const GenMember &other);
 	bool operator> (const GenMember &other);

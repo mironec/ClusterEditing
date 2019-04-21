@@ -1,10 +1,11 @@
 #include "GeneticAlgo.h"
 #include <cassert>
 #include <algorithm>
+#include <numeric>
 
 GenMember::GenMember()
 {
-	score = 0;
+	score = std::numeric_limits<double>::lowest();
 }
 
 GenMember::~GenMember()
@@ -19,6 +20,14 @@ void GenMember::setScore(double score)
 double GenMember::getScore() const
 {
 	return score;
+}
+
+double GenMember::getScore(const Graph & graph)
+{
+	if (score == std::numeric_limits<double>::lowest())
+		return computeScore(graph);
+	else
+		return score;
 }
 
 bool GenMember::operator<(const GenMember & other)
@@ -46,7 +55,7 @@ clustering_t GenAlgo::geneticAlgorithm(const Graph& graph, std::mt19937_64& gene
 	for (size_t generation = 0; generation < num_generations; generation++) {
 		// Evaluate population
 		for (size_t i = 0; i < num_population; i++)
-			population[i]->computeScore(graph);
+			population[i]->getScore(graph);
 
 		std::sort(population.begin(), population.end(), [](GenMember * m1, GenMember * m2){ return *m1 < *m2; });
 		if (verbose_mode && generation % 10 == 0) std::cout << "Generation: " << generation << " score: " << population[0]->getScore() << ", current mutation rate: " << (mutation_rate == -1.0f ?
@@ -204,9 +213,10 @@ GenMemberCluster * GenMemberCluster::createOffspringMember(const Graph & graph, 
 			currentParentIndex = currentParentIndex == 1 ? 2 : 1;
 		}
 	}*/
+	double score = 0;
 	int parent = generator() % 2;
-	if (parent == 0) clusters = m1->getClusters();
-	if (parent == 1) clusters = m2->getClusters();
+	if (parent == 0) { clusters = m1->getClusters(); score = m1->getScore(graph); }
+	if (parent == 1) { clusters = m2->getClusters(); score = m2->getScore(graph); }
 
 	// Mutation - splitting and coalescing clusters
 	for (size_t i = 0; i < size; i++) {
@@ -215,6 +225,9 @@ GenMemberCluster * GenMemberCluster::createOffspringMember(const Graph & graph, 
 				//Coalesce
 				size_t otherClusterIndex = generator() % size;
 				if (otherClusterIndex == i) continue;
+
+				score += graph.getDeltaInClusteringMerge(clusters[i], clusters[otherClusterIndex]);
+
 				for (int ni : clusters[otherClusterIndex]) { clusters[i].push_back(ni); }
 				clusters[otherClusterIndex].clear();
 			}
@@ -232,11 +245,16 @@ GenMemberCluster * GenMemberCluster::createOffspringMember(const Graph & graph, 
 					clusters[otherClusterIndex].push_back(clusters[i][clusters[i].size()-1]);
 					clusters[i].pop_back();
 				}
+
+				score += graph.getDeltaInClusteringSplit(clusters[i], clusters[otherClusterIndex]);
 			}
 		}
 	}
 
-	return new GenMemberCluster(clusters);
+	GenMemberCluster * offspring = new GenMemberCluster(clusters);
+	offspring->setScore(score);
+
+	return offspring;
 }
 
 double GenMemberCluster::computeScore(const Graph & graph)

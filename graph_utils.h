@@ -34,6 +34,13 @@ public:
 	// Returns the sum of the positive and negative errors for the given clustering set
 	double getErrorInClustering(const clustering_t& clusterings) const;
 
+	// Returns the change of the error in the clustering after merging two clusters
+	double getDeltaInClusteringMerge(const cluster_t& a, const cluster_t& b) const;
+
+	// Returns the change of the error in the clustering after splitting a cluster into two clusters
+	// Arguments: the two clusters AFTER splitting has been performed
+	double getDeltaInClusteringSplit(const cluster_t& a, const cluster_t& b) const;
+
 	// Streams a textual representation of the graph to the given output stream
 	void streamGraph(std::ostream& stream) const;
 
