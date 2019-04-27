@@ -352,13 +352,19 @@ Graph * Graph::readJENAStream(std::istream & stream)
 		int n2 = i+1;
 		while ((pos = line.find("\t", pos+1)) != std::string::npos) {
 			std::string edge_desc = line.substr(last_pos+1, pos - last_pos - 1);
-			double edge_cost = atof(edge_desc.c_str());
+			double edge_cost = 0.0;
+
 			// Bandaid fix for overflows
-			if (edge_cost < -1e250) {
-				edge_cost = -1e20;
-			}
-			if (edge_cost > 1e250) {
-				edge_cost = 1e20;
+			if (edge_desc == "inf") edge_cost = 1e20;
+			else if (edge_desc == "-inf") edge_cost = -1e20;
+			else {
+				edge_cost = atof(edge_desc.c_str());
+				if (edge_cost < -1e250) {
+					edge_cost = -1e20;
+				}
+				if (edge_cost > 1e250) {
+					edge_cost = 1e20;
+				}
 			}
 
 			graph->addEdgeWithCost(n1, n2, edge_cost);
